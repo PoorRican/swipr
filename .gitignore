@@ -11,3 +11,6 @@
 # gcc output
 *.out
 *.o
+
+# media files
+*.mp4
