@@ -11,13 +11,20 @@ double calculateSlope( Vec4i& l ) {
 }
 
 
+void beginRender( char* f_name, VideoWriter& out, Mat& frame ) {
+    Size dim( frame.cols, frame.rows );
+    out.open( f_name, CV_FOURCC('D', 'I', 'V', 'X'), 30.0, dim, true );
+    DBG( "Began video render\n" );
+}
+
+
 // Sub-routines
 /* This sub-routine returns the next Vec4i value in `roi`.
  *
  * Returns:
  *  Vec4i& to `roi.first`, `roi.last`, or `roi.diagonal` dependant on `step`
  */
-Vec4i& get_line() {
+static Vec4i& get_line() {
     switch( step ) {
         case first: {
             next = last;
@@ -47,7 +54,7 @@ Vec4i& get_line() {
 /* Sub-routine that draws a line defined by `l` onto `img`.
  * Vec4i must be in (X1, Y1), (X2, Y2) form
  */
-void render_line( Mat& img, Vec4i& l ) {
+static void render_line( Mat& img, Vec4i& l ) {
     Scalar color;
     if( step == diagonal ) color = Scalar( 0, 255, 0 );
     else color = Scalar( 0, 0, 255 );
@@ -88,9 +95,10 @@ void calibrateROI( Mat& img ) {
         else if ( waitKey ( 15 ) == 27) break;        // ESC to stop pre-maturely
     }
 
-    Rect region = calculateBoundingRect( temp );
-    renderBoundingRect( temp, region );
+    roiRegion = calculateBoundingRect( temp );
+    renderBoundingRect( temp, roiRegion );
     imshow( w_name, temp );
+    DBG( "Got ROI rectangle\n" );
     for(;;) if ( waitKey ( 15 ) == 27) break;        // ESC to stop pre-maturely
 }
 
@@ -98,7 +106,7 @@ void calibrateROI( Mat& img ) {
  * When the user releases that button, then that line is added to the current image.
  * When the mouse is dragged, (w/ the button down) the second point of the line is moved.
  */
-void inputROI( int event, int x, int y, int flags, void* param ) {
+static void inputROI( int event, int x, int y, int flags, void* param ) {
     Mat& image = *(Mat*) param;
 
     Vec4i& L = get_line();
@@ -147,7 +155,7 @@ void inputROI( int event, int x, int y, int flags, void* param ) {
 
 
 // ROI-bounding Functions
-Rect calculateBoundingRect( const Mat& img ) {
+static Rect calculateBoundingRect( const Mat& img ) {
     std::reference_wrapper<Vec4i> lines[] = { roi.first, roi.last, roi.diagonal };
 
     // order points in `roi` from left-to-right (X is smaller)
@@ -206,7 +214,7 @@ Rect calculateBoundingRect( const Mat& img ) {
     return Rect( tl, br );
 }
 
-void renderBoundingRect( Mat& img, Rect& bound) {
+static void renderBoundingRect( Mat& img, Rect& bound) {
     rectangle( img, bound.tl(), bound.br(), Scalar(255,0,0), 4 );
 }
 
@@ -222,5 +230,36 @@ int main( int argc, char** argv ) {
     DBG( "Video is: " ); DBG( first_frame.cols ); DBG( "x" ); DBG( first_frame.rows ); DBG( "\n" );
     calibrateROI(first_frame);
 
-}
+    // extract roiRegion from first_frame
+    Mat extracted = first_frame( roiRegion );
 
+    // Begin video writing
+    VideoWriter out;
+    beginRender( argv[2], out, extracted );
+    out << extracted;
+
+    // Video playback
+    Mat tmp;
+    const char* w_name = "Playback window";
+    namedWindow( w_name, 0 );
+    imshow( w_name, extracted );
+    for(;;) if( waitKey(0) == 27 ) break;
+
+    int count = (int) vid.get(CV_CAP_PROP_FRAME_COUNT);
+    DBG( "Detected " ); DBG( count ); DBG( " frames\n" );
+    for(int i = 1; i < count; i++) {
+        DBG( "Frame: " ); DBG( i ); DBG( "\n" );
+        vid >> tmp;
+        if( tmp.empty() ) {
+            DBG( "No more frames\n" );
+            break;
+        }
+        extracted = tmp( roiRegion );
+        imshow( w_name, extracted );
+        if( waitKey(33) == 27 ) break;          // keep playback at ~30fps
+        out.write( extracted );
+        // NOTE: it might be better to write all images then use ffmpeg
+    }
+
+    // run register input
+}
