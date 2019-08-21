@@ -19,11 +19,6 @@ void beginRender( char* f_name, VideoWriter& out, Mat& frame ) {
 
 
 // Sub-routines
-/* This sub-routine returns the next Vec4i value in `roi`.
- *
- * Returns:
- *  Vec4i& to `roi.first`, `roi.last`, or `roi.diagonal` dependant on `step`
- */
 static Vec4i& get_line() {
     switch( step ) {
         case first: {
@@ -51,9 +46,6 @@ static Vec4i& get_line() {
     return roi.diagonal;
 }
 
-/* Sub-routine that draws a line defined by `l` onto `img`.
- * Vec4i must be in (X1, Y1), (X2, Y2) form
- */
 static void render_line( Mat& img, Vec4i& l ) {
     Scalar color;
     if( step == diagonal ) color = Scalar( 0, 255, 0 );
@@ -102,10 +94,6 @@ void calibrateROI( Mat& img ) {
     for(;;) if ( waitKey ( 15 ) == 27) break;        // ESC to stop pre-maturely
 }
 
-/* Mouse callback. If the user presses left button, a line is started.
- * When the user releases that button, then that line is added to the current image.
- * When the mouse is dragged, (w/ the button down) the second point of the line is moved.
- */
 static void inputROI( int event, int x, int y, int flags, void* param ) {
     Mat& image = *(Mat*) param;
 
