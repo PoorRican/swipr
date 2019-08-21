@@ -14,3 +14,7 @@
 
 # media files
 *.mp4
+*.mpg
+
+# legacy folder
+legacy/*
