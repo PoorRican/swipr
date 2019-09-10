@@ -1,4 +1,5 @@
 #include <opencv2/opencv.hpp>
+#include <vector>
 
 #define DEBUG true
 
@@ -7,53 +8,52 @@ using namespace cv;
 
 
 // ROI memory
-struct {
-    Vec4i first;
-    Vec4i last;
-    Vec4i diagonal;
-} roi;
-Rect roiRegion;
-vector<Vec4i> registers;
+
+vector<Vec4i> registerROI;          // stores all regions of interest
+static int roi_i = -1;            // current index of registerROI vector
 
 
 // UI state function
-bool drawing_box = false;
 
-enum step_t {first, last, diagonal, done};
-step_t step = first, next;
+static bool drawing_box = false;        // true when user is drawing
 
 
 // Utility Functions
+
 template<class T>
 void DBG(T s) {
     if (DEBUG) std::cout << s;
 }
-double calculateSlope( Vec4i& );
+
+/* Wrapper for VideoWriter.open
+ * Sets up frame buffer for writing to file system.
+ */
 void beginRender( char* f_name, VideoWriter&, Mat& );
 
 
 // Sub-routines
-/* This sub-routine returns the next Vec4i value in `roi`.
- *
- * Returns:
- *  Vec4i& to `roi.first`, `roi.last`, or `roi.diagonal` dependant on `step`
+
+/* This sub-routine creates a new Vec4i value and sets `current_roi` to point to this Vec4i value.
  */
-static Vec4i& get_line();
-/* Sub-routine that draws a line defined by `l` onto `img`.
- * Vec4i must be in (X1, Y1), (X2, Y2) form
+static void new_roi();
+
+/* Sub-routine that draws `current_roi` onto the frame provided.
+ * Vec4i `current_roi` must be in (X1, Y1), (X2, Y2) form.
  */
-static void render_line( Mat&, Vec4i& );
+static void render_rect( Mat&, Vec4i& );
 
 
 // ROI Functions
+
+/* This provides main user interaction functionality in calculating the location of ROI.
+ * Starts a window displaying the frame passed and accepts user input via mouse clicks.
+ * The user is expected to draw rectangles over every ROI of interest.
+ */
 void calibrateROI( Mat& );
-/* Mouse callback. If the user presses left button, a line is started.
- * When the user releases that button, then that line is added to the current image.
+
+/* Mouse callback. If the user presses left button, a box is started.
+ * When the user releases that button, then that box is added to `registerROI`
+ *  and is rendered on the the current image.
  * When the mouse is dragged, (w/ the button down) the second point of the line is moved.
  */
 static void inputROI( int event, int x, int y, int flags, void* param );
-
-
-// ROI-bounding Functions
-static Rect calculateBoundingRect( const Mat& );
-static void renderBoundingRect( Mat&, Rect& );

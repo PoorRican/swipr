@@ -18,6 +18,8 @@
 
 ## Proposed Algorithm:
 
+### Old Algorithm:
+
     - Cash registers are infered and the angle in respect to camera perspective is calculated (since its mostly right angles).
         - find the angle which has the most semi-horizontal lines
         - find the flow of motion (customers). this is the register line
@@ -26,6 +28,10 @@
     - Cashiers are assumed to be standing in the cashier area, and facing relatively perpendicular to the register lane and are facing toward the customer. This angle is used to differentiate between customer and cashier when customer is standing near the cashier area.
     - Actions are quantified: cashier signing on/interacting with POS computer, cashier scanning items, cashier accepts coupons/cash from customer, cashier bagging, assistance from manager/coworker, etc. Any unknown action is registered for later quantification. Items are counted for any given transaction for later reference.
     - Audio feedback (as beeps) are expected to be heard during the motion of cashier scanning a product (with significant timeout/grace period). If there is no audio feedback, store owner is notified so that further measures can be taken. Irrelevant beeps can be safely ignored, and it can be assumed that no to product will be scanned at exactly the same time (two distinct beeps can be extrapolated from the audio)
+
+### New Algorithm/Method:
+
+    - Individual cashier registers are input by the user via a point and click UI
 
 ## Proposed Calibration/Setup:
 
