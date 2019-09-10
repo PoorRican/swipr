@@ -16,7 +16,14 @@ void beginRender( char* f_name, VideoWriter& out, Mat& frame ){
 static void new_roi(){
     Vec4i v( -1, -1, 0, 0 );
     registerROI.push_back( v );
-    roi_i++;
+    ++roi_i;
+}
+
+static void undo_roi(){
+    if( roi_i > -1 ){
+        registerROI.pop_back();
+        --roi_i;
+    }
 }
 
 static void render_rect( Mat& img, Vec4i& L ){
@@ -29,47 +36,12 @@ static void render_rect( Mat& img, Vec4i& L ){
     //circle( img, B, 5, color, 4 );
 }
 
-// ROI Functions
-void calibrateROI( Mat& img ){
-    // TODO: implement UNDO functionality
-    Mat src, temp;
-    img.copyTo( src );
-    img.copyTo( temp );
-
-    const char* w_name = "Calibrate ROI";       // window string
-    namedWindow( w_name, 0 );
-
-    /* NOTE: we set the value of 'params' to be the image we are working with
-     * so that the callback will have the image to edit.
-     */
-    setMouseCallback( w_name, inputROI, (void*) &src );
-
-    /* Main Function Loop. Here the working image is copied to the temp image,
-     * and if the user is drawing, then put the currently edited line onto that temp image.
-     * Display the temp image, and wait 15ms for a keystroke, then repeat.
-     */
-    for( ;; ){
-        src.copyTo( temp );
-        if( drawing_box ){
-            render_rect( temp, registerROI[0] );
-        }
-        imshow( w_name, temp );
-        if( waitKey( 15 ) == ESC_KEY ){         // ESC to stop
-            DBG( "Got ESC. Moving on...\n" );
-            break;
-        }
+static void render_roi( Mat& img ){
+    for( int i = 0; i < registerROI.size(); i++ ){
+        Vec4i& v = registerROI[i];
+        render_rect( img, v );
     }
-
-    // show final image
-    imshow( w_name, temp );
-    DBG( "Finished getting ROI rectangles\n" );
-    for( ;; )
-        if( waitKey( 15 ) == ESC_KEY ){
-            DBG( "Got second ESC. Moving on...\n" );
-            break;
-        }
 }
-
 
 static void inputROI( int event, int x, int y, int flags, void* param ){
     Mat& image = *(Mat*) param;
@@ -107,6 +79,71 @@ static void inputROI( int event, int x, int y, int flags, void* param ){
         }
             break;
     }
+}
+
+// Main Functionality
+void calibrateROI( Mat& img ){
+    Mat src, temp;
+    img.copyTo( src );
+    img.copyTo( temp );
+
+    const char* w_name = "Calibrate ROI";       // window string
+    namedWindow( w_name, 0 );
+
+    /* NOTE: we set the value of 'params' to be the image we are working with
+     * so that the callback will have the image to edit.
+     */
+    setMouseCallback( w_name, inputROI, (void*) &src );
+
+    /* Main Function Loop. Here the working image is copied to the temp image,
+     * and if the user is drawing, then put the currently edited line onto that temp image.
+     * Display the temp image, and wait 15ms for a keystroke, then repeat.
+     */
+    bool done = false;
+    for( ;; ){
+        src.copyTo( temp );
+        if( drawing_box ){
+            render_rect( temp, registerROI[0] );
+        }
+        imshow( w_name, temp );
+        int input = waitKey( 15 );
+        switch( input ) {
+            case ESC_KEY: {
+                DBG( "Got ESC. Moving on...\n" );
+                done = true;
+            }
+                break;
+
+            case U_KEY: {
+                std::cout << "'u' key was pressed" << std::endl;
+                undo_roi();
+                img.copyTo( src );
+                render_roi( src );
+            }
+                break;
+
+            case -1: {
+                // this is what is normally returned by `waitKey` w/ no input
+            }
+                break;
+
+            default: {
+                DBG( input );
+                DBG( "\n" );
+            }
+                break;
+        }
+        if( done ){ break; }
+    }
+
+    // show final image
+    imshow( w_name, temp );
+    DBG( "Finished getting ROI rectangles\n" );
+    for( ;; )
+        if( waitKey( 15 ) == ESC_KEY ){
+            DBG( "Got second ESC. Moving on...\n" );
+            break;
+        }
 }
 
 

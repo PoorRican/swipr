@@ -10,3 +10,4 @@
 
 
 #define ESC_KEY 1048603
+#define U_KEY 1048693
