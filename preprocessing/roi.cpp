@@ -10,13 +10,6 @@
 using namespace cv;
 
 
-void beginRender( char* f_name, VideoWriter& out, Mat& frame ){
-    Size dim( frame.cols, frame.rows );
-    out.open( f_name, CV_FOURCC( 'D', 'I', 'V', 'X' ), 30.0, dim, true );
-    DBG( "Began video render\n" );
-}
-
-
 // Sub-routines
 static void new_roi(){
     Vec4i v( -1, -1, 0, 0 );
@@ -50,7 +43,6 @@ static void render_roi( Mat& img ){
 
 static void inputROI( int event, int x, int y, int flags, void* param ){
     Mat& image = *(Mat*) param;
-
 
     switch( event ) {
         case EVENT_MOUSEMOVE: {
@@ -107,11 +99,12 @@ void calibrateROI( Mat& img ){
     bool done = false;
     for( ;; ){
         src.copyTo( temp );
-        // TODO: for whatever reason, there is no visual feedback after first ROI is input
         if( drawing_box ){
             render_rect( temp, registerROI[0] );
         }
         imshow( w_name, temp );
+
+        // handle input
         int input = waitKey( 15 );
         switch( input ) {
             case ESC_KEY: {
@@ -142,14 +135,10 @@ void calibrateROI( Mat& img ){
         if( done ){ break; }
     }
 
-    // show final image
-    imshow( w_name, temp );
-    DBG( "Finished getting ROI rectangles\n" );
-    for( ;; )
-        if( waitKey( 15 ) == ESC_KEY ){
-            DBG( "Got second ESC. Moving on...\n" );
-            break;
-        }
+    destroyWindow( w_name );
+
+    DBG( "Finished getting regions of interest\n\n" );
+    // TODO: implement persistent data
 }
 
 
@@ -169,20 +158,18 @@ int main( int argc, char** argv ){
 
     calibrateROI( frame );
 
-    // show all ROI frames and create directories
+    // create directories for each roi
+    DBG( "Creating directories for each region of interest\n\n" );
     Mat extracted;
+    // TODO: delete any existing directories
     mkdir( RENDER_PATH, 0777 );
     for( std::size_t i = 0; i < registerROI.size(); i++ ){
         Vec4i& v = registerROI[i];
         // TODO: add a catch-all and remove malformed ROI rectangles
         extracted = frame( Rect( Point2i( v[0], v[1] ),
                                  Point2i( v[2], v[3] ) ) );
-        const char* w_name = "Show ROI frames";
-        namedWindow( w_name, 0 );
-        imshow( w_name, extracted );
         string path = string( RENDER_PATH ) + "/" + std::to_string( i );
         mkdir( path.c_str(), 0777 );
-        for( ;; ) if( waitKey( 0 ) == ESC_KEY ) break;
     }
 
     // Begin video writing
@@ -203,16 +190,15 @@ int main( int argc, char** argv ){
         DBG( "Frame: " ); DBG( i ); DBG( "\n" );
         vid >> frame;
         if( frame.empty() ){
-            DBG( "No more frames\n" );
+            DBG( "\nNo more frames!\n\n" );
             break;
         }
-        // NOTE: it might be better to write all images then use ffmpeg
     }
 
     // ffmpeg and playback
     vector<string> _ffmpeg_cmds, _xdg_cmds;
     for( std::size_t r = 0; r < registerROI.size(); r++ ){
-        string path = string( RENDER_PATH ) + "/" + std::to_string( r );
+        string path = string( RENDER_PATH ) + std::to_string( r );
         // TODO: fetch framerate
         // ffmpeg command
         string cmd = "'ffmpeg -f image2 -framerate 30 -i " + path;
@@ -220,14 +206,15 @@ int main( int argc, char** argv ){
         cmd += output + "_%d.jpg ";
 
         cmd += path + '/';
-        cmd += output + ".avi' ";
+        cmd += output + ".avi";
+        cmd += "-y &> /dev/null' ";                // overwrite any existing files and ignore stdout
 
         _ffmpeg_cmds.push_back( cmd );
 
         // xdg command
         cmd = "'xdg-open " + path;
         cmd += "/";
-        cmd += output + ".avi' ";
+        cmd += output + ".avi &> /dev/null' ";    // ignore stdout
 
         _xdg_cmds.push_back( cmd );
     }
@@ -238,7 +225,8 @@ int main( int argc, char** argv ){
         xdg_cmd.append( _xdg_cmds[r] );
     }
 
+    DBG( "Calling ffmpeg\n" );
     system( ffmpeg_cmd.c_str() );
+    DBG( "Calling xdg-open\n" );
     system( xdg_cmd.c_str() );
-
 }

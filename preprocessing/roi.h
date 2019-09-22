@@ -25,11 +25,6 @@ void DBG(T s) {
     if (DEBUG) std::cout << s;
 }
 
-/* Wrapper for VideoWriter.open
- * Sets up frame buffer for writing to file system.
- */
-void beginRender( char* f_name, VideoWriter&, Mat& );
-
 
 // Sub-routines
 
