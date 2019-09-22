@@ -173,9 +173,12 @@ int main( int argc, char** argv ){
     }
 
     // Begin video writing
+    DBG( "Starting to Process Frames:\n" );
     int count = (int) vid.get( CV_CAP_PROP_FRAME_COUNT );
-    DBG( "Detected " ); DBG( count ); DBG( " frames\n" );
-    for( int i = 1; i < count; i++ ){
+    DBG( count );
+    DBG( " frames detected\n" );
+    int completed = -1;
+    for( int i = 1; i <= count; i++ ){
         for( std::size_t r = 0; r < registerROI.size(); r++ ){
             string f_name =
                     string( RENDER_PATH ) + "/" + std::to_string( r ) + "/" + output + "_" + std::to_string( i ) +
@@ -186,8 +189,12 @@ int main( int argc, char** argv ){
             imwrite( f_name, extracted );
         }
 
-        // TODO: show percentage done
-        DBG( "Frame: " ); DBG( i ); DBG( "\n" );
+        int percentage = (int) (((float) i / (float) count) * 100);
+        if( percentage % 10 == 0 && completed != percentage ){
+            completed = percentage;
+            DBG( completed );
+            DBG( "% complete...\n" );
+        }
         vid >> frame;
         if( frame.empty() ){
             DBG( "\nNo more frames!\n\n" );
