@@ -100,7 +100,9 @@ void calibrateROI( Mat& img ){
     for( ;; ){
         src.copyTo( temp );
         if( drawing_box ){
-            render_rect( temp, registerROI[0] );
+            for( std::size_t r = 0; r < registerROI.size(); r++ ){
+                render_rect( temp, registerROI[r] );
+            }
         }
         imshow( w_name, temp );
 
