@@ -1,5 +1,6 @@
 # PyCharm cache (just in case)
 .idea/*
+cmake-build-debug/*
 
 # python bytecode
 *.pyc

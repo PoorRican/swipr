@@ -1,5 +1,10 @@
+#include "sys/stat.h"       // for mkdir
+#include "cstring"
 #include "roi.h"
 #include "keycodes.h"
+
+
+#define RENDER_PATH "/tmp/static_roi/"      // tmp
 
 
 using namespace cv;
@@ -37,7 +42,7 @@ static void render_rect( Mat& img, Vec4i& L ){
 }
 
 static void render_roi( Mat& img ){
-    for( int i = 0; i < registerROI.size(); i++ ){
+    for( std::size_t i = 0; i < registerROI.size(); i++ ){
         Vec4i& v = registerROI[i];
         render_rect( img, v );
     }
@@ -102,6 +107,7 @@ void calibrateROI( Mat& img ){
     bool done = false;
     for( ;; ){
         src.copyTo( temp );
+        // TODO: for whatever reason, there is no visual feedback after first ROI is input
         if( drawing_box ){
             render_rect( temp, registerROI[0] );
         }
@@ -148,60 +154,91 @@ void calibrateROI( Mat& img ){
 
 
 int main( int argc, char** argv ){
-    Mat first_frame;
+    Mat frame;
     VideoCapture vid;
     vid.open( string( argv[1] ) );
+    const string output = string( argv[2] );
 
     // Grab first frame
-    vid >> first_frame;
+    vid >> frame;
     DBG( "Video is: " );
-    DBG( first_frame.cols );
+    DBG( frame.cols );
     DBG( "x" );
-    DBG( first_frame.rows );
+    DBG( frame.rows );
     DBG( "\n" );
 
-    calibrateROI( first_frame );
+    calibrateROI( frame );
 
-    // show all ROI frames
+    // show all ROI frames and create directories
     Mat extracted;
-    for( int i = 0; i < registerROI.size(); i++ ){
+    mkdir( RENDER_PATH, 0777 );
+    for( std::size_t i = 0; i < registerROI.size(); i++ ){
         Vec4i& v = registerROI[i];
-        extracted = first_frame( Rect( Point2i( v[0], v[1] ),
-                                       Point2i( v[2], v[3] ) ) );
+        // TODO: add a catch-all and remove malformed ROI rectangles
+        extracted = frame( Rect( Point2i( v[0], v[1] ),
+                                 Point2i( v[2], v[3] ) ) );
         const char* w_name = "Show ROI frames";
         namedWindow( w_name, 0 );
         imshow( w_name, extracted );
+        string path = string( RENDER_PATH ) + "/" + std::to_string( i );
+        mkdir( path.c_str(), 0777 );
         for( ;; ) if( waitKey( 0 ) == ESC_KEY ) break;
     }
 
     // Begin video writing
-    /*
-    VideoWriter out;
-    beginRender( argv[2], out, extracted );
-    out << extracted;
-
-    // Video playback
-    Mat tmp;
-    const char* w_name = "Playback window";
-    namedWindow( w_name, 0 );
-    imshow( w_name, extracted );
-    for(;;) if( waitKey(0) == 27 ) break;
-
-    int count = (int) vid.get(CV_CAP_PROP_FRAME_COUNT);
+    int count = (int) vid.get( CV_CAP_PROP_FRAME_COUNT );
     DBG( "Detected " ); DBG( count ); DBG( " frames\n" );
-    for(int i = 1; i < count; i++) {
+    for( int i = 1; i < count; i++ ){
+        for( std::size_t r = 0; r < registerROI.size(); r++ ){
+            string f_name =
+                    string( RENDER_PATH ) + "/" + std::to_string( r ) + "/" + output + "_" + std::to_string( i ) +
+                    ".jpg";
+            Vec4i& v = registerROI[r];
+            extracted = frame( Rect( Point2i( v[0], v[1] ),
+                                     Point2i( v[2], v[3] ) ) );
+            imwrite( f_name, extracted );
+        }
+
+        // TODO: show percentage done
         DBG( "Frame: " ); DBG( i ); DBG( "\n" );
-        vid >> tmp;
-        if( tmp.empty() ) {
+        vid >> frame;
+        if( frame.empty() ){
             DBG( "No more frames\n" );
             break;
         }
-        imshow( w_name, extracted );
-        if( waitKey(33) == 27 ) break;          // keep playback at ~30fps
-        out.write( extracted );
         // NOTE: it might be better to write all images then use ffmpeg
     }
 
-    // run register input
-     */
+    // ffmpeg and playback
+    vector<string> _ffmpeg_cmds, _xdg_cmds;
+    for( std::size_t r = 0; r < registerROI.size(); r++ ){
+        string path = string( RENDER_PATH ) + "/" + std::to_string( r );
+        // TODO: fetch framerate
+        // ffmpeg command
+        string cmd = "'ffmpeg -f image2 -framerate 30 -i " + path;
+        cmd += "/";
+        cmd += output + "_%d.jpg ";
+
+        cmd += path + '/';
+        cmd += output + ".avi' ";
+
+        _ffmpeg_cmds.push_back( cmd );
+
+        // xdg command
+        cmd = "'xdg-open " + path;
+        cmd += "/";
+        cmd += output + ".avi' ";
+
+        _xdg_cmds.push_back( cmd );
+    }
+
+    string ffmpeg_cmd = "parallel ::: ", xdg_cmd = "parallel ::: ";
+    for( std::size_t r = 0; r < registerROI.size(); r++ ){
+        ffmpeg_cmd.append( _ffmpeg_cmds[r] );
+        xdg_cmd.append( _xdg_cmds[r] );
+    }
+
+    system( ffmpeg_cmd.c_str() );
+    system( xdg_cmd.c_str() );
+
 }
