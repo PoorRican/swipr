@@ -46,7 +46,7 @@ static void inputROI( int event, int x, int y, int flags, void* param ){
 
     switch( event ) {
         case EVENT_MOUSEMOVE: {
-            if( drawing_box ){
+            if( drawing_box && x >= 0 && x < image.cols && y >= 0 && y < image.rows ){
                 registerROI[roi_i][2] = x;
                 registerROI[roi_i][3] = y;
             }
@@ -55,9 +55,11 @@ static void inputROI( int event, int x, int y, int flags, void* param ){
 
         case EVENT_LBUTTONDOWN: {
             drawing_box = true;
-            new_roi();            // create new Vec4i rect
-            Vec4i v( x, y, x, y );
-            registerROI[roi_i] = v;
+            if( x >= 0 && x < image.cols && y >= 0 && y < image.rows ){
+                new_roi();            // create new Vec4i rect
+                Vec4i v( x, y, x, y );
+                registerROI[roi_i] = v;
+            }
         }
             break;
 
@@ -167,7 +169,6 @@ int main( int argc, char** argv ){
     mkdir( RENDER_PATH, 0777 );
     for( std::size_t i = 0; i < registerROI.size(); i++ ){
         Vec4i& v = registerROI[i];
-        // TODO: add a catch-all and remove malformed ROI rectangles
         extracted = frame( Rect( Point2i( v[0], v[1] ),
                                  Point2i( v[2], v[3] ) ) );
         string path = string( RENDER_PATH ) + "/" + std::to_string( i );
