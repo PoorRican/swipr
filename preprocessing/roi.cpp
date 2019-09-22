@@ -34,7 +34,7 @@ static void render_rect( Mat& img, Vec4i& L ){
     //circle( img, B, 5, color, 4 );
 }
 
-static void render_roi( Mat& img ){
+static void render_all_roi( Mat& img ){
     for( std::size_t i = 0; i < registerROI.size(); i++ ){
         Vec4i& v = registerROI[i];
         render_rect( img, v );
@@ -121,7 +121,7 @@ void calibrateROI( Mat& img ){
                 std::cout << "'u' key was pressed" << std::endl;
                 undo_roi();
                 img.copyTo( src );
-                render_roi( src );
+                render_all_roi( src );
             }
                 break;
 
@@ -176,7 +176,7 @@ int main( int argc, char** argv ){
     }
 
     // Begin video writing
-    DBG( "Starting to Process Frames:\n" );
+    DBG( "Extracting Frames:\n" );
     int count = (int) vid.get( CV_CAP_PROP_FRAME_COUNT );
     DBG( count );
     DBG( " frames detected\n" );
