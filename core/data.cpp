@@ -12,17 +12,17 @@ using namespace cv;
 std::vector<Vec4i> registerROI;
 
 
-bool readData( const std::string& f_name ){
+bool readData(){
     DBG( "Reading data...\n" );
-    FileStorage f( f_name, FileStorage::READ );
+    FileStorage f( global_data_storage_fn, FileStorage::READ );
     f["registerROI"] >> registerROI;
     DBG( "Data read!\n\n" );
     return true;
 }
 
-void writeData( const std::string& f_name ){
+void writeData(){
     DBG( "Saving data...\n" );
-    FileStorage f( f_name, FileStorage::WRITE );
+    FileStorage f( global_data_storage_fn, FileStorage::WRITE );
     f << "registerROI" << registerROI;
     f.release();
     DBG( "Data saved\n\n" );

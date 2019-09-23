@@ -11,12 +11,23 @@
 #include "../core/data.h"
 
 
-
-
 using namespace cv;
 
 
 // Utility Functions
+
+static void createTmpDirectories( const string& tmp_dir ){
+    DBG( "Creating directories for each region of interest\n\n" );
+    Mat extracted;
+    if( tmp_dir.find( "/tmp/" ) ){        // ensure that `tmp_dir` is in '/tmp/' and delete any existing
+        system( (string( "rm -rf " + tmp_dir ).c_str()) );
+    }
+    mkdir( tmp_dir.c_str(), 0777 );
+    for( std::size_t i = 0; i < registerROI.size(); i++ ){
+        string path = tmp_dir + "/" + std::to_string( i );
+        mkdir( path.c_str(), 0777 );
+    }
+}
 
 inline static void calibrateRegionHelp(){
     std::cout << "Waiting for user input...\n";
@@ -101,12 +112,12 @@ static void editROI( int event, int x, int y, int flags, void* param ){
                 const int padding = 25;
                 for( std::size_t r = 0; r < registerROI.size(); ++r ){
                     if( (x >= registerROI[r][0] - padding) && (x <= registerROI[r][0] + padding) &&
-                            (y >= registerROI[r][1] - padding) && (y <= registerROI[r][1] + padding) ){
+                        (y >= registerROI[r][1] - padding) && (y <= registerROI[r][1] + padding) ){
                         first_coord = true;
                         roi_i = (int) r;
                         break;
                     } else if( (x >= registerROI[r][2] - padding) && (x <= registerROI[r][2] + padding) &&
-                            (y >= registerROI[r][3] - padding) && (y <= registerROI[r][3] + padding) ){
+                               (y >= registerROI[r][3] - padding) && (y <= registerROI[r][3] + padding) ){
                         first_coord = false;
                         roi_i = (int) r;
                         break;

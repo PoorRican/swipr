@@ -7,7 +7,7 @@
 #include <string>
 
 
-// ROI memory
+const extern char* global_data_storage_fn;
 
 /**
  * @brief stores all regions of interest
@@ -17,10 +17,11 @@
  * @remark It is preferred that coordinates be top-left and bottom-right but that is not required.
  */
 extern std::vector<cv::Vec4i> registerROI;
+// TODO: there should be the ability to have regions for more than one data source
 
 
-// Data Persistence
+// Data Persistence Functions
 
-bool readData( const std::string& f_name );
+bool readData();
 
-void writeData( const std::string& f_name );
+void writeData();

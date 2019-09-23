@@ -30,10 +30,10 @@ static UI_mode uiMode = WAITING;
 
 // Utility Functions
 
+static void createTmpDirectories( const string& tmp_dir );
+
 inline static void calibrateRegionHelp();
-
 inline static void inputROIHelp();
-
 inline static void editROIHelp();
 
 // Sub-routines
@@ -86,6 +86,9 @@ static void render_rect( Mat& img, const Vec4i& L, Scalar color, int radius );
  */
 static void render_all_roi( Mat& img );
 
+
+// Callback functions
+
 /**
  * @brief Mouse callback for inputting ROI.
  *
@@ -121,7 +124,7 @@ static void inputROI( int event, int x, int y, int flags, void* param );
 static void editROI( int event, int x, int y, int flags, void* param );
 
 
-// ROI Functions
+// Main Functionality
 
 /** @brief Provides user interaction for calculating the coordinates of regions of interest (ROIs).
  *
@@ -133,5 +136,8 @@ static void editROI( int event, int x, int y, int flags, void* param );
  *
  * @param [out]img cv::Mat of the frame to use for calibrating ROI coordinates
  */
-void calibrateROI( const Mat& img );
+void calibrateRegions( const Mat& img );
 
+
+void calibrateFromVideo( const string& input, const string& render_path = "", const string& prefix = "",
+                         bool render = true );
