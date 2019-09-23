@@ -17,6 +17,31 @@
 using namespace cv;
 
 
+// Utility Functions
+
+inline static void calibrateRegionHelp(){
+    std::cout << "Waiting for user input...\n";
+    std::cout << "\tPress 'i' for INPUT mode.\n";
+    std::cout << "\tPress 'e' for EDIT mode.\n";
+    std::cout << "Or press 'ESC' to continue.\n";
+}
+
+inline static void inputROIHelp(){
+    std::cout << "INPUT mode:\n";
+    std::cout << "\tClick a corner, then left click to draw the region of interest.\n\n";
+    std::cout << "\tOr press 'u' to undo last region.\n";
+    std::cout << "\tOr press 'e' for EDIT mode.\n";
+    std::cout << "Press 'ESC' to leave INPUT mode.\n";
+}
+
+inline static void editROIHelp(){
+    std::cout << "EDIT mode:\n";
+    std::cout << "Hover over a corner and left click to select. drag to edit region boundaries.\n\n";
+    std::cout << "Or press 'i' for INPUT mode.\n";
+    std::cout << "Press 'ESC' to leave EDIT mode.\n";
+}
+
+
 // Sub-routines
 static void new_roi(){
     Vec4i v( -1, -1, 0, 0 );
@@ -179,6 +204,7 @@ static void inputROI( int event, int x, int y, int flags, void* param ){
     }
 }
 
+
 // Main Functionality
 void calibrateROI( const Mat& img ){
     Mat drawn;
@@ -187,6 +213,8 @@ void calibrateROI( const Mat& img ){
     const char* w_name = "Calibrate ROI";       // window string
     namedWindow( w_name, 0 );
     imshow( w_name, drawn );
+
+    calibrateRegionHelp();
 
     /* Main Function Loop. Here the working image is copied to the drawn image,
      * and if the user is drawing, then put the currently edited line onto that drawn image.
@@ -216,10 +244,13 @@ void calibrateROI( const Mat& img ){
         switch( input ) {
             case ESC_KEY: {
                 if( uiMode == INPUT || uiMode == EDIT ){
+                    calibrateRegionHelp();
+
                     uiMode = WAITING;
                     img.copyTo( drawn );
                     render_all_roi( drawn );
                     setMouseCallback( w_name, nullptr, nullptr );
+
                     DBG( "Now waiting for user to change modes\n" );
                 } else if( uiMode == WAITING ){
                     DBG( "Got ESC. Moving on...\n" );
@@ -242,9 +273,12 @@ void calibrateROI( const Mat& img ){
                 /* NOTE: we set the value of 'params' to be the image we are working with
                  * so that the callback will have the image to edit.
                  */
+                inputROIHelp();
+
                 uiMode = EDIT;
                 roi_i = -1;
                 setMouseCallback( w_name, editROI, (void*) &drawn );
+
                 DBG( "Now in EDIT mode\n" );
             }
                 break;
@@ -253,11 +287,14 @@ void calibrateROI( const Mat& img ){
                 /* NOTE: we set the value of 'params' to be the image we are working with
                  * so that the callback will have the image to edit.
                  */
+                editROIHelp();
+
                 uiMode = INPUT;
                 if( !registerROI.empty() ){
                     roi_i = (int) (registerROI.size()) - 1;
                 }
                 setMouseCallback( w_name, inputROI, (void*) &drawn );
+
                 DBG( "Now in INPUT mode\n" );
             }
 
