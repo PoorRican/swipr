@@ -4,14 +4,20 @@ project(swipr)
 
 set(CMAKE_CXX_STANDARD 14)
 
+option(DEBUG
+        "Turn on internal debug output" true)
+if (DEBUG)
+    add_definitions(-DDBG_OUTPUT)
+endif ()
+
 find_package( OpenCV REQUIRED )
 
-include_directories(preprocessing)
+include_directories(preprocessing, core)
 
-add_executable(swipr
-        preprocessing/roi.cpp
-        preprocessing/roi.h preprocessing/keycodes.h)
+add_executable(calibrate_test
+        preprocessing/calibrate.cpp
+        preprocessing/calibrate.h core/keycodes.h core/roi.h core/debug.h)
 
-target_link_libraries( swipr ${OpenCV_LIBS} )
+target_link_libraries(calibrate_test ${OpenCV_LIBS})
 
 # TODO: add testing here

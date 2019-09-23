@@ -1,22 +1,8 @@
 #include <opencv2/opencv.hpp>
 #include <vector>
 
-#define DEBUG true
-
 
 using namespace cv;
-
-
-// ROI memory
-
-/**
- * @brief stores all regions of interest
- *
- * Regions are defined by two coordinates and shall be ordered [X1, Y1, X2, Y2]
- *
- * @remark It is preferred that coordinates be top-left and bottom-right but that is not required.
- */
-vector<Vec4i> registerROI;
 
 
 /** @brief stores the index of the ROI that is being worked on
@@ -43,11 +29,6 @@ static UI_mode uiMode = WAITING;
 
 
 // Utility Functions
-
-template<class T>
-void DBG(T s) {
-    if (DEBUG) std::cout << s;
-}
 
 
 // Sub-routines

@@ -1,7 +1,14 @@
+//
+// Created by Josue David Figueroa on 9/9/19.
+// Copyright (c) 2019 Creation Consortium. All rights reserved.
+//
+
 #include "sys/stat.h"       // for mkdir
-#include "cstring"
-#include "roi.h"
-#include "keycodes.h"
+
+#include "calibrate.h"
+#include "../core/keycodes.h"
+#include "../core/roi.h"
+#include "../core/debug.h"
 
 
 #define RENDER_PATH "/tmp/static_roi/"      // tmp
@@ -66,12 +73,12 @@ static void editROI( int event, int x, int y, int flags, void* param ){
                 const int padding = 25;
                 for( std::size_t r = 0; r < registerROI.size(); ++r ){
                     if( (x >= registerROI[r][0] - padding) && (x <= registerROI[r][0] + padding) &&
-                        (y >= registerROI[r][1] - padding) && (y <= registerROI[r][1] + padding) ){
+                            (y >= registerROI[r][1] - padding) && (y <= registerROI[r][1] + padding) ){
                         first_coord = true;
                         roi_i = (int) r;
                         break;
                     } else if( (x >= registerROI[r][2] - padding) && (x <= registerROI[r][2] + padding) &&
-                               (y >= registerROI[r][3] - padding) && (y <= registerROI[r][3] + padding) ){
+                            (y >= registerROI[r][3] - padding) && (y <= registerROI[r][3] + padding) ){
                         first_coord = false;
                         roi_i = (int) r;
                         break;
