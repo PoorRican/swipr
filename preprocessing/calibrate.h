@@ -139,5 +139,13 @@ static void editROI( int event, int x, int y, int flags, void* param );
 void calibrateRegions( const Mat& img );
 
 
-void calibrateFromVideo( const string& input, const string& render_path = "", const string& prefix = "",
-                         bool render = true );
+/**
+ * @brief This is a wrapper for `calibrateRegions` using a source video
+ * @param input [in] filename for source video
+ * @param source_id [in] id label for `source_filter_t`
+ * @param render_path [in] path to render output
+ * @param prefix [in] name for rendered region videos
+ * @param render [in] controls whether regions are rendered from video
+ */
+void calibrateFromVideo( const string& input, const string& source_id,
+                         const string& render_path = "", const string& prefix = "output", bool render = false );

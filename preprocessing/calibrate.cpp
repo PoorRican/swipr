@@ -14,6 +14,9 @@
 using namespace cv;
 
 
+vector<Vec4i>* registerROI = nullptr;
+
+
 // Utility Functions
 
 static void createTmpDirectories( const string& tmp_dir ){
@@ -23,7 +26,7 @@ static void createTmpDirectories( const string& tmp_dir ){
         system( (string( "rm -rf " + tmp_dir ).c_str()) );
     }
     mkdir( tmp_dir.c_str(), 0777 );
-    for( std::size_t i = 0; i < registerROI.size(); i++ ){
+    for( std::size_t i = 0; i < (*registerROI).size(); i++ ){
         string path = tmp_dir + "/" + std::to_string( i );
         mkdir( path.c_str(), 0777 );
     }
@@ -56,13 +59,13 @@ inline static void editROIHelp(){
 
 static void new_roi(){
     Vec4i v( -1, -1, 0, 0 );
-    registerROI.push_back( v );
+    (*registerROI).push_back( v );
     ++roi_i;
 }
 
 static void undo_roi(){
     if( roi_i > -1 ){
-        registerROI.pop_back();
+        (*registerROI).pop_back();
         --roi_i;
     }
 }
@@ -89,8 +92,8 @@ static void render_rect( Mat& img, const Vec4i& L, const Scalar color, const int
 }
 
 static void render_all_roi( Mat& img ){
-    for( std::size_t i = 0; i < registerROI.size(); i++ ){
-        Vec4i& v = registerROI[i];
+    for( std::size_t i = 0; i < (*registerROI).size(); i++ ){
+        Vec4i& v = (*registerROI)[i];
         render_rect( img, v );
     }
 }
@@ -110,14 +113,14 @@ static void editROI( int event, int x, int y, int flags, void* param ){
             if( uiMode == EDIT ){
                 // TODO: implement selecting a side
                 const int padding = 25;
-                for( std::size_t r = 0; r < registerROI.size(); ++r ){
-                    if( (x >= registerROI[r][0] - padding) && (x <= registerROI[r][0] + padding) &&
-                        (y >= registerROI[r][1] - padding) && (y <= registerROI[r][1] + padding) ){
+                for( std::size_t r = 0; r < (*registerROI).size(); ++r ){
+                    if( (x >= (*registerROI)[r][0] - padding) && (x <= (*registerROI)[r][0] + padding) &&
+                        (y >= (*registerROI)[r][1] - padding) && (y <= (*registerROI)[r][1] + padding) ){
                         first_coord = true;
                         roi_i = (int) r;
                         break;
-                    } else if( (x >= registerROI[r][2] - padding) && (x <= registerROI[r][2] + padding) &&
-                               (y >= registerROI[r][3] - padding) && (y <= registerROI[r][3] + padding) ){
+                    } else if( (x >= (*registerROI)[r][2] - padding) && (x <= (*registerROI)[r][2] + padding) &&
+                               (y >= (*registerROI)[r][3] - padding) && (y <= (*registerROI)[r][3] + padding) ){
                         first_coord = false;
                         roi_i = (int) r;
                         break;
@@ -130,11 +133,11 @@ static void editROI( int event, int x, int y, int flags, void* param ){
                 // drag selected corner
             else if( uiMode == DRAWING ){
                 if( first_coord ){
-                    registerROI[roi_i][0] = x;
-                    registerROI[roi_i][1] = y;
+                    (*registerROI)[roi_i][0] = x;
+                    (*registerROI)[roi_i][1] = y;
                 } else{
-                    registerROI[roi_i][2] = x;
-                    registerROI[roi_i][3] = y;
+                    (*registerROI)[roi_i][2] = x;
+                    (*registerROI)[roi_i][3] = y;
                 }
             }
         }
@@ -150,13 +153,13 @@ static void editROI( int event, int x, int y, int flags, void* param ){
         case EVENT_LBUTTONUP: {
             if( uiMode == DRAWING ){
                 DBG( "New ROI Coordinates: (" );
-                DBG( registerROI[roi_i][0] );
+                DBG( (*registerROI)[roi_i][0] );
                 DBG( ", " );
-                DBG( registerROI[roi_i][1] );
+                DBG( (*registerROI)[roi_i][1] );
                 DBG( ")\t(" );
-                DBG( registerROI[roi_i][2] );
+                DBG( (*registerROI)[roi_i][2] );
                 DBG( ", " );
-                DBG( registerROI[roi_i][3] );
+                DBG( (*registerROI)[roi_i][3] );
                 DBG( ")\n" );
                 roi_i = -1;
                 uiMode = EDIT;
@@ -178,8 +181,8 @@ static void inputROI( int event, int x, int y, int flags, void* param ){
         case EVENT_MOUSEMOVE: {
             // check that UI click was within image
             if( uiMode == DRAWING && x >= 0 && x < image.cols && y >= 0 && y < image.rows ){
-                registerROI[roi_i][2] = x;
-                registerROI[roi_i][3] = y;
+                (*registerROI)[roi_i][2] = x;
+                (*registerROI)[roi_i][3] = y;
             }
         }
             break;
@@ -190,7 +193,7 @@ static void inputROI( int event, int x, int y, int flags, void* param ){
             if( x >= 0 && x < image.cols && y >= 0 && y < image.rows ){
                 new_roi();            // create new Vec4i rect
                 Vec4i v( x, y, x, y );
-                registerROI[roi_i] = v;
+                (*registerROI)[roi_i] = v;
             }
         }
             break;
@@ -199,13 +202,13 @@ static void inputROI( int event, int x, int y, int flags, void* param ){
             if( uiMode == DRAWING ){
                 uiMode = INPUT;
                 DBG( "New ROI Coordinates: (" );
-                DBG( registerROI[roi_i][0] );
+                DBG( (*registerROI)[roi_i][0] );
                 DBG( ", " );
-                DBG( registerROI[roi_i][1] );
+                DBG( (*registerROI)[roi_i][1] );
                 DBG( ")\t(" );
-                DBG( registerROI[roi_i][2] );
+                DBG( (*registerROI)[roi_i][2] );
                 DBG( ", " );
-                DBG( registerROI[roi_i][3] );
+                DBG( (*registerROI)[roi_i][3] );
                 DBG( ")\n" );
             }
         }
@@ -238,11 +241,11 @@ void calibrateRegions( const Mat& img ){
         // render and/or highlight ROIs
         if( (uiMode == DRAWING) ^ (uiMode == EDIT && roi_i != -1) ){
             img.copyTo( drawn );
-            for( std::size_t r = 0; r < registerROI.size(); r++ ){
+            for( std::size_t r = 0; r < (*registerROI).size(); r++ ){
                 if( r == roi_i ){
-                    render_rect( drawn, registerROI[r], Scalar( 0, 255, 255 ), 15 );
+                    render_rect( drawn, (*registerROI)[r], Scalar( 0, 255, 255 ), 15 );
                 } else{
-                    render_rect( drawn, registerROI[r] );
+                    render_rect( drawn, (*registerROI)[r] );
                 }
             }
             imshow( w_name, drawn );
@@ -304,8 +307,8 @@ void calibrateRegions( const Mat& img ){
                 editROIHelp();
 
                 uiMode = INPUT;
-                if( !registerROI.empty() ){
-                    roi_i = (int) (registerROI.size()) - 1;
+                if( !(*registerROI).empty() ){
+                    roi_i = (int) ((*registerROI).size()) - 1;
                 }
                 setMouseCallback( w_name, inputROI, (void*) &drawn );
 
@@ -334,10 +337,25 @@ void calibrateRegions( const Mat& img ){
 }
 
 
-void calibrateFromVideo( const string& input, const string& prefix, const string& render_path, bool render ){
+void calibrateFromVideo( const string& input, const string& source_id, const string& prefix, const string& render_path,
+                         bool render ){
     Mat frame;
     VideoCapture vid;
     vid.open( string( input ) );
+
+    bool new_source = true;
+    for( auto it = g_filters.begin(); it != g_filters.end(); it++ ){
+        if( (*it).source == source_id ){
+            new_source = false;
+            registerROI = &((*it).regions);
+        }
+    }
+    if( new_source ){
+        source_filter_t source;
+        source.source = source_id;
+        g_filters.push_back( source );
+        registerROI = &(g_filters[g_filters.size() - 1].regions);
+    }
 
     // Grab first frame
     vid >> frame;
@@ -351,7 +369,7 @@ void calibrateFromVideo( const string& input, const string& prefix, const string
     calibrateRegions( frame );
     writeData();
 
-    if( render && !registerROI.empty() ){
+    if( render && !(*registerROI).empty() ){
         Mat extracted;
         const string output = string( prefix );
         createTmpDirectories( render_path );
@@ -363,11 +381,11 @@ void calibrateFromVideo( const string& input, const string& prefix, const string
         DBG( " frames detected\n" );
         int completed = -1;
         for( int i = 1; i <= count; i++ ){
-            for( std::size_t r = 0; r < registerROI.size(); r++ ){
+            for( std::size_t r = 0; r < (*registerROI).size(); r++ ){
                 string f_name =
                         string( render_path ) + "/" + std::to_string( r ) + "/" + output + "_" + std::to_string( i ) +
                         ".jpg";
-                Vec4i& v = registerROI[r];
+                Vec4i& v = (*registerROI)[r];
                 extracted = frame( Rect( Point2i( v[0], v[1] ),
                                          Point2i( v[2], v[3] ) ) );
                 imwrite( f_name, extracted );
@@ -388,7 +406,7 @@ void calibrateFromVideo( const string& input, const string& prefix, const string
 
         // ffmpeg and playback
         vector<string> _ffmpeg_cmds, _xdg_cmds;
-        for( std::size_t r = 0; r < registerROI.size(); r++ ){
+        for( std::size_t r = 0; r < (*registerROI).size(); r++ ){
             string path = string( render_path ) + std::to_string( r );
             // TODO: fetch framerate
             // ffmpeg command
@@ -411,7 +429,7 @@ void calibrateFromVideo( const string& input, const string& prefix, const string
         }
 
         string ffmpeg_cmd = "parallel ::: ", xdg_cmd = "parallel ::: ";
-        for( std::size_t r = 0; r < registerROI.size(); r++ ){
+        for( std::size_t r = 0; r < (*registerROI).size(); r++ ){
             ffmpeg_cmd.append( _ffmpeg_cmds[r] );
             xdg_cmd.append( _xdg_cmds[r] );
         }

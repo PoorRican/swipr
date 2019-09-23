@@ -6,12 +6,12 @@
 #include "../preprocessing/calibrate.h"
 
 
-const char* global_data_storage_fn = "calibrate_test.yaml";
+const char* g_data_storage_fn = "calibrate_test.yaml";
 
 
 int main( int argc, char** argv ){
     readData();
-    calibrateFromVideo( argv[1], argv[2], "/tmp/static_roi/", true );
+    calibrateFromVideo( argv[1], argv[1], argv[2], "/tmp/static_roi/", true );
     return 0;
 }
 
