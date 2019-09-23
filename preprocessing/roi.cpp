@@ -24,14 +24,25 @@ static void undo_roi(){
     }
 }
 
-static void render_rect( Mat& img, Vec4i& L ){
-    Scalar color( 0, 0, 255 );
+static void render_rect( Mat& img, const Vec4i& L ){
+    Scalar color( 0x00, 0x00, 0xFF );
+    if( uiMode == EDIT ){
+        color = {0xFF, 0x99, 0x30};
+    } else{
+    }
 
     const Point2i A( L[0], L[1] ), B( L[2], L[3] );
 
-    rectangle( img, A, B, color, 4 );
-    //circle( img, A, 5, color, 4 );
-    //circle( img, B, 5, color, 4 );
+    rectangle( img, A, B, color, 8 );
+}
+
+static void render_rect( Mat& img, const Vec4i& L, const Scalar color, const int radius = 7 ){
+    const Point2i A( L[0], L[1] ), B( L[2], L[3] );
+
+    rectangle( img, A, B, color, 12 );
+    Scalar red( 0, 0, 255 );
+    circle( img, A, radius, red, -1 );
+    circle( img, B, radius, red, -1 );
 }
 
 static void render_all_roi( Mat& img ){
@@ -41,12 +52,86 @@ static void render_all_roi( Mat& img ){
     }
 }
 
+static void editROI( int event, int x, int y, int flags, void* param ){
+    Mat& image = *(Mat*) param;
+
+    // stores whether selected coordinates is the first or second pair in Vec4i
+    static auto first_coord = true;
+
+    switch( event ) {
+        case EVENT_MOUSEMOVE: {
+            // select a mouse corner
+            if( uiMode == EDIT ){
+                // TODO: implement selecting a side
+                const int padding = 25;
+                for( std::size_t r = 0; r < registerROI.size(); ++r ){
+                    if( (x >= registerROI[r][0] - padding) && (x <= registerROI[r][0] + padding) &&
+                        (y >= registerROI[r][1] - padding) && (y <= registerROI[r][1] + padding) ){
+                        first_coord = true;
+                        roi_i = (int) r;
+                        break;
+                    } else if( (x >= registerROI[r][2] - padding) && (x <= registerROI[r][2] + padding) &&
+                               (y >= registerROI[r][3] - padding) && (y <= registerROI[r][3] + padding) ){
+                        first_coord = false;
+                        roi_i = (int) r;
+                        break;
+                    } else{
+                        roi_i = -1;
+                    }
+                }
+                // NOTE: highlighting is handled in `calibrateROI`
+            }
+                // drag selected corner
+            else if( uiMode == DRAWING ){
+                if( first_coord ){
+                    registerROI[roi_i][0] = x;
+                    registerROI[roi_i][1] = y;
+                } else{
+                    registerROI[roi_i][2] = x;
+                    registerROI[roi_i][3] = y;
+                }
+            }
+        }
+            break;
+
+        case EVENT_LBUTTONDOWN: {
+            if( uiMode == EDIT && roi_i != -1 ){
+                uiMode = DRAWING;
+            }
+        }
+            break;
+
+        case EVENT_LBUTTONUP: {
+            if( uiMode == DRAWING ){
+                DBG( "New ROI Coordinates: (" );
+                DBG( registerROI[roi_i][0] );
+                DBG( ", " );
+                DBG( registerROI[roi_i][1] );
+                DBG( ")\t(" );
+                DBG( registerROI[roi_i][2] );
+                DBG( ", " );
+                DBG( registerROI[roi_i][3] );
+                DBG( ")\n" );
+                roi_i = -1;
+                uiMode = EDIT;
+            }
+        }
+            break;
+
+        default: {
+            DBG( "Unknown UI event during inputROI" );
+        }
+            break;
+    }
+}
+
 static void inputROI( int event, int x, int y, int flags, void* param ){
     Mat& image = *(Mat*) param;
 
     switch( event ) {
         case EVENT_MOUSEMOVE: {
-            if( drawing_box && x >= 0 && x < image.cols && y >= 0 && y < image.rows ){
+            // check that UI click was within image
+            if( uiMode == DRAWING && x >= 0 && x < image.cols && y >= 0 && y < image.rows ){
                 registerROI[roi_i][2] = x;
                 registerROI[roi_i][3] = y;
             }
@@ -54,7 +139,8 @@ static void inputROI( int event, int x, int y, int flags, void* param ){
             break;
 
         case EVENT_LBUTTONDOWN: {
-            drawing_box = true;
+            uiMode = DRAWING;
+            // check that UI click was within image
             if( x >= 0 && x < image.cols && y >= 0 && y < image.rows ){
                 new_roi();            // create new Vec4i rect
                 Vec4i v( x, y, x, y );
@@ -64,66 +150,109 @@ static void inputROI( int event, int x, int y, int flags, void* param ){
             break;
 
         case EVENT_LBUTTONUP: {
-            drawing_box = false;
-            render_rect( image, registerROI[roi_i] );
-            DBG( "New ROI Coordinates: (" );
-            DBG( registerROI[roi_i][0] );
-            DBG( ", " );
-            DBG( registerROI[roi_i][1] );
-            DBG( ")\t(" );
-            DBG( registerROI[roi_i][2] );
-            DBG( ", " );
-            DBG( registerROI[roi_i][3] );
-            DBG( ")\n" );
+            if( uiMode == DRAWING ){
+                uiMode = INPUT;
+                DBG( "New ROI Coordinates: (" );
+                DBG( registerROI[roi_i][0] );
+                DBG( ", " );
+                DBG( registerROI[roi_i][1] );
+                DBG( ")\t(" );
+                DBG( registerROI[roi_i][2] );
+                DBG( ", " );
+                DBG( registerROI[roi_i][3] );
+                DBG( ")\n" );
+            }
+        }
+            break;
+
+        default: {
+            DBG( "Unknown UI event during inputROI" );
         }
             break;
     }
 }
 
 // Main Functionality
-void calibrateROI( Mat& img ){
-    Mat src, temp;
-    img.copyTo( src );
-    img.copyTo( temp );
+void calibrateROI( const Mat& img ){
+    Mat drawn;
+    img.copyTo( drawn );
 
     const char* w_name = "Calibrate ROI";       // window string
     namedWindow( w_name, 0 );
+    imshow( w_name, drawn );
 
-    /* NOTE: we set the value of 'params' to be the image we are working with
-     * so that the callback will have the image to edit.
+    /* Main Function Loop. Here the working image is copied to the drawn image,
+     * and if the user is drawing, then put the currently edited line onto that drawn image.
+     * Display the drawn image, and wait 15ms for a keystroke, then repeat.
      */
-    setMouseCallback( w_name, inputROI, (void*) &src );
-
-    /* Main Function Loop. Here the working image is copied to the temp image,
-     * and if the user is drawing, then put the currently edited line onto that temp image.
-     * Display the temp image, and wait 15ms for a keystroke, then repeat.
-     */
-    bool done = false;
     for( ;; ){
-        src.copyTo( temp );
-        if( drawing_box ){
+        // render and/or highlight ROIs
+        if( (uiMode == DRAWING) ^ (uiMode == EDIT && roi_i != -1) ){
+            img.copyTo( drawn );
             for( std::size_t r = 0; r < registerROI.size(); r++ ){
-                render_rect( temp, registerROI[r] );
+                if( r == roi_i ){
+                    render_rect( drawn, registerROI[r], Scalar( 0, 255, 255 ), 15 );
+                } else{
+                    render_rect( drawn, registerROI[r] );
+                }
             }
+            imshow( w_name, drawn );
+        } else{
+            // NOTE: is there a way to optimize this so that window is not constantly refreshed?
+            img.copyTo( drawn );
+            render_all_roi( drawn );
+            imshow( w_name, drawn );
         }
-        imshow( w_name, temp );
 
-        // handle input
+        // handle keyboard input
         int input = waitKey( 15 );
         switch( input ) {
             case ESC_KEY: {
-                DBG( "Got ESC. Moving on...\n" );
-                done = true;
+                if( uiMode == INPUT || uiMode == EDIT ){
+                    uiMode = WAITING;
+                    img.copyTo( drawn );
+                    render_all_roi( drawn );
+                    setMouseCallback( w_name, nullptr, nullptr );
+                    DBG( "Now waiting for user to change modes\n" );
+                } else if( uiMode == WAITING ){
+                    DBG( "Got ESC. Moving on...\n" );
+                    uiMode = DONE;
+                }
             }
                 break;
 
             case U_KEY: {
-                std::cout << "'u' key was pressed" << std::endl;
-                undo_roi();
-                img.copyTo( src );
-                render_all_roi( src );
+                if( uiMode == INPUT ){
+                    undo_roi();
+                    img.copyTo( drawn );
+                    render_all_roi( drawn );
+                    DBG( "Undid last action\n" );
+                }
             }
                 break;
+
+            case E_KEY: {
+                /* NOTE: we set the value of 'params' to be the image we are working with
+                 * so that the callback will have the image to edit.
+                 */
+                uiMode = EDIT;
+                roi_i = -1;
+                setMouseCallback( w_name, editROI, (void*) &drawn );
+                DBG( "Now in EDIT mode\n" );
+            }
+                break;
+
+            case I_KEY: {
+                /* NOTE: we set the value of 'params' to be the image we are working with
+                 * so that the callback will have the image to edit.
+                 */
+                uiMode = INPUT;
+                if( !registerROI.empty() ){
+                    roi_i = (int) (registerROI.size()) - 1;
+                }
+                setMouseCallback( w_name, inputROI, (void*) &drawn );
+                DBG( "Now in INPUT mode\n" );
+            }
 
             case -1: {
                 // this is what is normally returned by `waitKey` w/ no input
@@ -132,11 +261,12 @@ void calibrateROI( Mat& img ){
 
             default: {
                 DBG( input );
+                std::cout << (input == 27);
                 DBG( "\n" );
             }
                 break;
         }
-        if( done ){ break; }
+        if( uiMode == DONE ){ break; }
     }
 
     destroyWindow( w_name );

@@ -28,7 +28,18 @@ static int roi_i = -1;
 
 // UI state
 
-static bool drawing_box = false;        // true when user is drawing
+/**
+ * @brief Defines modes of UI state machine
+ */
+enum UI_mode {
+    WAITING, INPUT, DRAWING, EDIT, DONE
+};
+
+
+/**
+ * @brief Current UI state
+ */
+static UI_mode uiMode = WAITING;
 
 
 // Utility Functions
@@ -57,6 +68,9 @@ static void undo_roi();
 
 /**
  * @brief Sub-routine that draws a rectangle using the provided coordinates onto the image provided.
+ *
+ * This function changes the color used based of the UI state `uiMode`. It defaults to using red as the
+ *  color used.
  *
  * @remark This is UI function and is called as ROIs are moved and edited.
  *
@@ -104,6 +118,22 @@ static void render_all_roi( Mat& img );
  */
 static void inputROI( int event, int x, int y, int flags, void* param );
 
+/**
+ * @brief Mouse callback for editing existing ROIs.
+ *
+ * @remark This is the callback used when `uiMode` is `EDIT`
+ *
+ * When `x` and `y` are within reasonable range of a coordinate in `registerROI`,
+ *  the rectangle is marked by `roi_i` and is then highlighted via the overloaded `render_rect` function.
+ *
+ * @param [in]event type of UI input. This corresponds to key-presses and mouse-clicks.
+ * @param [in]x X coordinate of UI event
+ * @param [in]y Y coordinate of UI event
+ * @param [in]flags flags Unused. This is part of the signature required by cv::setMouseCallback
+ * @param [in]param This is the src image that is being used as UI input and feedback
+ */
+static void editROI( int event, int x, int y, int flags, void* param );
+
 
 // ROI Functions
 
@@ -112,7 +142,10 @@ static void inputROI( int event, int x, int y, int flags, void* param );
  * Starts a window displaying the frame passed and accepts user input via mouse clicks.
  * The user is expected to draw rectangles over every ROI of interest.
  *
+ * @remark The window is constantly refreshed and might not be the most efficient implementation.
+ *  This shouldn't be a problem as this is just the calibration step.
+ *
  * @param [out]img cv::Mat of the frame to use for calibrating ROI coordinates
  */
-void calibrateROI( Mat& img );
+void calibrateROI( const Mat& img );
 

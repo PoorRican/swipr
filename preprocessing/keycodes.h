@@ -8,6 +8,7 @@
 #endif //SWIPR_KEYCODES_H
 
 
-
 #define ESC_KEY 1048603
 #define U_KEY 1048693
+#define E_KEY 1048677
+#define I_KEY 1048681
