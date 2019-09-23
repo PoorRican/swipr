@@ -16,7 +16,7 @@ include_directories(preprocessing, core)
 
 add_executable(calibrate_test
         preprocessing/calibrate.cpp
-        preprocessing/calibrate.h core/keycodes.h core/roi.h core/debug.h)
+        preprocessing/calibrate.h core/keycodes.h core/data.h core/debug.h core/data.cpp)
 
 target_link_libraries(calibrate_test ${OpenCV_LIBS})
 

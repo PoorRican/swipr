@@ -7,8 +7,8 @@
 
 #include "calibrate.h"
 #include "../core/keycodes.h"
-#include "../core/roi.h"
 #include "../core/debug.h"
+#include "../core/data.h"
 
 
 #define RENDER_PATH "/tmp/static_roi/"      // tmp
@@ -289,13 +289,17 @@ int main( int argc, char** argv ){
     vid.open( string( argv[1] ) );
     const string output = string( argv[2] );
 
+    readData( "test.yaml" );
+
     // Grab first frame
     vid >> frame;
     DBG( "Video is: " );
     DBG( frame.cols );
     DBG( "x" );
     DBG( frame.rows );
-    DBG( "\n" );
+    DBG( "\n\n" );
+    DBG( "Awaiting User Input\n\n" );
+
 
     calibrateROI( frame );
 
@@ -311,6 +315,8 @@ int main( int argc, char** argv ){
         string path = string( RENDER_PATH ) + "/" + std::to_string( i );
         mkdir( path.c_str(), 0777 );
     }
+
+    writeData( "test.yaml" );
 
     // Begin video writing
     DBG( "Extracting Frames:\n" );

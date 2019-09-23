@@ -4,12 +4,7 @@
 //
 #include <opencv2/opencv.hpp>
 #include <vector>
-
-
-#ifndef SWIPR_ROI_H
-#define SWIPR_ROI_H
-
-#endif //SWIPR_ROI_H
+#include <string>
 
 
 // ROI memory
@@ -21,4 +16,11 @@
  *
  * @remark It is preferred that coordinates be top-left and bottom-right but that is not required.
  */
-std::vector<cv::Vec4i> registerROI;
+extern std::vector<cv::Vec4i> registerROI;
+
+
+// Data Persistence
+
+bool readData( const std::string& f_name );
+
+void writeData( const std::string& f_name );
