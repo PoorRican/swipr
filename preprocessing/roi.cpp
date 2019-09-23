@@ -205,7 +205,7 @@ void calibrateROI( const Mat& img ){
         }
 
         // handle keyboard input
-        int input = waitKey( 15 );
+        char input = (char) waitKey( 15 );
         switch( input ) {
             case ESC_KEY: {
                 if( uiMode == INPUT || uiMode == EDIT ){
@@ -221,7 +221,7 @@ void calibrateROI( const Mat& img ){
             }
                 break;
 
-            case U_KEY: {
+            case 'u': {
                 if( uiMode == INPUT ){
                     undo_roi();
                     img.copyTo( drawn );
@@ -231,7 +231,7 @@ void calibrateROI( const Mat& img ){
             }
                 break;
 
-            case E_KEY: {
+            case 'e': {
                 /* NOTE: we set the value of 'params' to be the image we are working with
                  * so that the callback will have the image to edit.
                  */
@@ -242,7 +242,7 @@ void calibrateROI( const Mat& img ){
             }
                 break;
 
-            case I_KEY: {
+            case 'i': {
                 /* NOTE: we set the value of 'params' to be the image we are working with
                  * so that the callback will have the image to edit.
                  */
