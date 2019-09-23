@@ -30,6 +30,11 @@ static UI_mode uiMode = WAITING;
 
 // Utility Functions
 
+inline static void calibrateRegionHelp();
+
+inline static void inputROIHelp();
+
+inline static void editROIHelp();
 
 // Sub-routines
 
