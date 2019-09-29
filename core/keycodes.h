@@ -6,7 +6,6 @@
 #ifndef SWIPR_KEYCODES_H
 #define SWIPR_KEYCODES_H
 
-#endif //SWIPR_KEYCODES_H
-
-
 #define ESC_KEY 27
+
+#endif //SWIPR_KEYCODES_H

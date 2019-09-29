@@ -6,8 +6,6 @@
 #ifndef SWIPR_DEBUG_H
 #define SWIPR_DEBUG_H
 
-#endif //SWIPR_DEBUG_H
-
 #ifdef DBG_OUTPUT
 #define DEBUG true
 #else
@@ -19,3 +17,5 @@ template<class T>
 void DBG( T s ){
     if( DEBUG ) std::cout << s;
 }
+
+#endif //SWIPR_DEBUG_H

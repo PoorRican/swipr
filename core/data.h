@@ -7,6 +7,10 @@
 #include <string>
 
 
+#ifndef SWIPR_DATA_H
+#define SWIPR_DATA_H
+
+
 const extern char* g_data_storage_fn;       // filename for global data
 
 
@@ -45,3 +49,5 @@ extern std::vector<source_filter_t> g_filters;
 bool readData();
 
 void writeData();
+
+#endif //SWIPR_DATA_H

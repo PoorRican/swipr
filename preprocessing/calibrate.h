@@ -2,6 +2,9 @@
 #include <vector>
 
 
+#ifndef SWIPR_CALIBRATE_H
+#define SWIPR_CALIBRATE_H
+
 using namespace cv;
 
 
@@ -149,3 +152,5 @@ void calibrateRegions( const Mat& img );
  */
 void calibrateFromVideo( const string& input, const string& source_id,
                          const string& render_path = "", const string& prefix = "output", bool render = false );
+
+#endif //SWIPR_CALIBRATE_H
