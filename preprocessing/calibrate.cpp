@@ -50,6 +50,7 @@ inline static void inputROIHelp(){
 inline static void editROIHelp(){
     std::cout << "EDIT mode:\n";
     std::cout << "Hover over a corner and left click to select. drag to edit region boundaries.\n\n";
+    std::cout << "Double click right mouse button to delete a selected region.\n\n";
     std::cout << "Or press 'i' for INPUT mode.\n";
     std::cout << "Press 'ESC' to leave EDIT mode.\n";
 }
@@ -145,7 +146,7 @@ static void editROI( int event, int x, int y, int flags, void* param ){
 
         case EVENT_LBUTTONDOWN: {
             if( uiMode == EDIT && roi_i != -1 ){
-                uiMode = DRAWING;
+                uiMode = DRAWING;       // begin to drag selected ROI
             }
         }
             break;
@@ -166,6 +167,12 @@ static void editROI( int event, int x, int y, int flags, void* param ){
             }
         }
             break;
+
+        case EVENT_RBUTTONDBLCLK: {
+            if( uiMode == EDIT && roi_i != -1 ){
+                (*registerROI).erase( (*registerROI).begin() + roi_i );     // delete selected ROI
+            }
+        }
 
         default: {
             DBG( "Unknown UI event during inputROI" );
