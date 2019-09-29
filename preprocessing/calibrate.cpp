@@ -36,6 +36,7 @@ inline static void calibrateRegionHelp(){
     std::cout << "Waiting for user input...\n";
     std::cout << "\tPress 'i' for INPUT mode.\n";
     std::cout << "\tPress 'e' for EDIT mode.\n";
+    std::cout << "\tPress 's' to save changes.\n";
     std::cout << "Or press 'ESC' to continue.\n";
 }
 
@@ -320,6 +321,10 @@ void calibrateRegions( const Mat& img ){
                 setMouseCallback( w_name, inputROI, (void*) &drawn );
 
                 DBG( "Now in INPUT mode\n" );
+            }
+
+            case 's': {
+                writeData();
             }
 
             case -1: {
