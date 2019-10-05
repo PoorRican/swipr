@@ -16,6 +16,7 @@ const extern char* g_data_storage_fn;       // filename for global data
 
 // Regions of Interest
 
+// Region of Interest Functionality
 /**
  * @brief Struct for storing regions of interest for a given video source (eg: camera stream)
  */
@@ -41,6 +42,21 @@ struct source_filter_t {
 
 
 extern std::vector<source_filter_t> g_filters;
+
+
+/**
+ * @brief Function to fetch or create a new source filter in `g_filters`
+ * @param source_id [in] string for `source_filter_t.source`
+ * @param filter_ptr [out] pointer to a pointer containing `source_filter_t`.
+ *          This is either set to point to the existing struct in g_filters,
+ *          or is populated with new `source_id`.
+ *          Pointer arguments are copied in C/C++.
+ * @return true if `source_id` does not correspond to an existing source_filter_t in `g_filters`
+ *
+ * @remark The expression `auto* source = new source_filter_t` should always be used ahead of this function
+ *          call to initialize new memory.
+ */
+bool get_source_filter( const std::string& source_id, source_filter_t** filter_ptr );
 
 
 // Data Persistence Functions

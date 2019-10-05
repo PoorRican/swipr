@@ -12,6 +12,21 @@ using namespace cv;
 std::vector<source_filter_t> g_filters;
 
 
+bool get_source_filter( const std::string& source_id, source_filter_t** filter_ptr ){
+    for( auto it = g_filters.begin(); it != g_filters.end(); it++ ){
+        if( (*it).source == source_id ){
+            *filter_ptr = &(*it);                           // filter_ptr points to vector memory
+            return false;                                   // source_filter_t was not created
+        }
+    }
+    // source_filter_t is being created
+    (**filter_ptr).source = source_id;                      // update new source_filter_t
+    g_filters.push_back( **filter_ptr );                      // add source_filter_t to vector memory
+    *filter_ptr = &(g_filters[g_filters.size() - 1]);        // filter_ptr should point to vector memory
+    return true;                                            // source_filter_t was created
+}
+
+
 bool readData(){
     DBG( "Reading data...\n" );
     FileStorage fs( g_data_storage_fn, FileStorage::READ );

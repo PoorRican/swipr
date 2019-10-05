@@ -245,6 +245,7 @@ void calibrateRegions( const Mat& img ){
      * and if the user is drawing, then put the currently edited line onto that drawn image.
      * Display the drawn image, and wait 15ms for a keystroke, then repeat.
      */
+    uiMode = WAITING;
     for( ;; ){
         // render and/or highlight ROIs
         if( (uiMode == DRAWING) ^ (uiMode == EDIT && roi_i != -1) ){
@@ -349,24 +350,18 @@ void calibrateRegions( const Mat& img ){
 }
 
 
-void calibrateFromVideo( const string& input, const string& source_id, const string& prefix, const string& render_path,
-                         bool render ){
+void calibrateFromVideo( const string& video_path, const string& source_id,
+                         const string& prefix, const string& render_path, bool render ){
     Mat frame;
     VideoCapture vid;
-    vid.open( string( input ) );
+    vid.open( string( video_path ) );
 
-    bool new_source = true;
-    for( auto it = g_filters.begin(); it != g_filters.end(); it++ ){
-        if( (*it).source == source_id ){
-            new_source = false;
-            registerROI = &((*it).regions);
-        }
-    }
+    auto* source = new source_filter_t;
+    bool new_source = get_source_filter( source_id, &source );
     if( new_source ){
-        source_filter_t source;
-        source.source = source_id;
-        g_filters.push_back( source );
         registerROI = &(g_filters[g_filters.size() - 1].regions);
+    } else{
+        registerROI = &((*source).regions);
     }
 
     // Grab first frame
@@ -451,5 +446,26 @@ void calibrateFromVideo( const string& input, const string& source_id, const str
         DBG( "Calling xdg-open\n" );
         system( xdg_cmd.c_str() );
     }
+
+}
+
+void calibrateFromVideo( const string& video_path, source_filter_t** source_ptr ){
+    Mat frame;
+    VideoCapture vid;
+    vid.open( string( video_path ) );
+
+    registerROI = &((**source_ptr).regions);
+
+    // Grab first frame
+    vid >> frame;
+    DBG( "Video is: " );
+    DBG( frame.cols );
+    DBG( "x" );
+    DBG( frame.rows );
+    DBG( "\n\n" );
+    DBG( "Awaiting User Input\n\n" );
+
+    calibrateRegions( frame );
+    writeData();
 
 }

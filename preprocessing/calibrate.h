@@ -1,3 +1,5 @@
+#include "../core/data.h"
+
 #include <opencv2/opencv.hpp>
 #include <vector>
 
@@ -20,7 +22,7 @@ static int roi_i = -1;
 /**
  * @brief Defines modes of UI state machine
  */
-enum UI_mode {
+enum calibration_mode {
     WAITING, INPUT, DRAWING, EDIT, DONE
 };
 
@@ -28,7 +30,7 @@ enum UI_mode {
 /**
  * @brief Current UI state
  */
-static UI_mode uiMode = WAITING;
+static calibration_mode uiMode = WAITING;
 
 
 // Utility Functions
@@ -144,13 +146,15 @@ void calibrateRegions( const Mat& img );
 
 /**
  * @brief This is a wrapper for `calibrateRegions` using a source video
- * @param input [in] filename for source video
+ * @param video_path [in] filename for source video
  * @param source_id [in] id label for `source_filter_t`
  * @param render_path [in] path to render output
  * @param prefix [in] name for rendered region videos
  * @param render [in] controls whether regions are rendered from video
  */
-void calibrateFromVideo( const string& input, const string& source_id,
+void calibrateFromVideo( const string& video_path, const string& source_id,
                          const string& render_path = "", const string& prefix = "output", bool render = false );
+
+void calibrateFromVideo( const string& video_path, source_filter_t** source_ptr );
 
 #endif //SWIPR_CALIBRATE_H
