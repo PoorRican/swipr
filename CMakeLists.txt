@@ -18,14 +18,23 @@ include_directories(preprocessing, core)
 add_executable(calibrate_test
         tests/calibrate_test.cpp
         preprocessing/calibrate.h preprocessing/calibrate.cpp
-        core/keycodes.h core/data.h core/debug.h core/data.cpp)
+        core/keycodes.h core/data.h core/data.cpp
+        utils/debug.h utils/file.h utils/roi.h)
 target_link_libraries(calibrate_test ${OpenCV_LIBS})
+
+add_executable(sequence_test
+        tests/sequence_test.cpp
+        preprocessing/sequence.h preprocessing/sequence.cpp
+        core/keycodes.h core/data.h core/data.cpp
+        utils/debug.h utils/file.h utils/roi.h)
+target_link_libraries(sequence_test ${OpenCV_LIBS})
 
 # Main Executable Build
 add_executable(swipr
         swipr.cpp
-        preprocessing/calibrate.h preprocessing/calibrate.cpp
-        core/keycodes.h core/data.h core/debug.h core/data.cpp core/menu.h core/menu.cpp)
+        preprocessing/calibrate.h preprocessing/calibrate.cpp preprocessing/sequence.h preprocessing/sequence.cpp
+        core/keycodes.h core/data.h core/data.cpp core/menu.h core/menu.cpp
+        utils/debug.h utils/file.h utils/roi.h)
 target_link_libraries(swipr ${OpenCV_LIBS})
 
 # TODO: add testing here

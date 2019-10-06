@@ -7,8 +7,9 @@
 
 #include "calibrate.h"
 #include "../core/keycodes.h"
-#include "../core/debug.h"
+#include "../utils/debug.h"
 #include "../core/data.h"
+#include "../utils/roi.h"
 
 
 using namespace cv;
@@ -21,7 +22,6 @@ vector<Vec4i>* registerROI = nullptr;
 
 static void createTmpDirectories( const string& tmp_dir ){
     DBG( "Creating directories for each region of interest\n\n" );
-    Mat extracted;
     if( tmp_dir.find( "/tmp/" ) ){        // ensure that `tmp_dir` is in '/tmp/' and delete any existing
         system( (string( "rm -rf " + tmp_dir ).c_str()) );
     }
@@ -354,7 +354,7 @@ void calibrateFromVideo( const string& video_path, const string& source_id,
                          const string& prefix, const string& render_path, bool render ){
     Mat frame;
     VideoCapture vid;
-    vid.open( string( video_path ) );
+    vid.open( video_path );
 
     auto* source = new source_filter_t;
     bool new_source = get_source_filter( source_id, &source );
@@ -383,7 +383,7 @@ void calibrateFromVideo( const string& video_path, const string& source_id,
 
         // Extract Frames
         DBG( "Extracting Frames:\n" );
-        int count = (int) vid.get( CV_CAP_PROP_FRAME_COUNT );
+        double count = vid.get( CV_CAP_PROP_FRAME_COUNT );
         DBG( count );
         DBG( " frames detected\n" );
         int completed = -1;
@@ -392,9 +392,7 @@ void calibrateFromVideo( const string& video_path, const string& source_id,
                 string f_name =
                         string( render_path ) + "/" + std::to_string( r ) + "/" + output + "_" + std::to_string( i ) +
                         ".jpg";
-                Vec4i& v = (*registerROI)[r];
-                extracted = frame( Rect( Point2i( v[0], v[1] ),
-                                         Point2i( v[2], v[3] ) ) );
+                extract_frame( frame, extracted, (*registerROI)[r] );
                 imwrite( f_name, extracted );
             }
 

@@ -5,6 +5,7 @@
 
 #include "menu.h"
 #include "data.h"
+#include "../utils/file.h"
 #include "../preprocessing/calibrate.h"
 
 #include <cstdlib>
@@ -118,10 +119,7 @@ void new_region(){
         cout << "Enter path to video file: ";
         cin >> fn;
 
-        string cmd;
-        cmd = "test -e " + fn;      // exit code is 0 when true, 1 when false
-
-        if( system( cmd.c_str() ) == 0 ){
+        if( file_exists( fn ) ){
             break;
         } else{
             cout << "File does not exist." << endl;
@@ -164,10 +162,7 @@ void existing_region(){
         cout << "Enter path to video file: ";
         cin >> fn;
 
-        string cmd;
-        cmd = "test -e " + fn;      // exit code is 0 when true, 1 when false
-
-        if( system( cmd.c_str() ) == 0 ){
+        if( file_exists( fn ) ){
             break;
         } else{
             cout << "File does not exist." << endl;

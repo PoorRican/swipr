@@ -14,7 +14,7 @@
 
 
 template<class T>
-void DBG( T s ){
+inline void DBG( T s ){
     if( DEBUG ) std::cout << s;
 }
 

@@ -6,7 +6,7 @@
 #include "../preprocessing/calibrate.h"
 
 
-const char* g_data_storage_fn = "calibrate_test.yaml";
+const char* g_data_storage_fn = "tests/calibrate_test.yaml";
 
 
 int main( int argc, char** argv ){

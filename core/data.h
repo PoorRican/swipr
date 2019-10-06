@@ -11,12 +11,12 @@
 #define SWIPR_DATA_H
 
 
-const extern char* g_data_storage_fn;       // filename for global data
+/// @var Filename for global data
+const extern char* g_data_storage_fn;
 
 
-// Regions of Interest
+// Regions of Interest Data
 
-// Region of Interest Functionality
 /**
  * @brief Struct for storing regions of interest for a given video source (eg: camera stream)
  */
@@ -46,6 +46,7 @@ extern std::vector<source_filter_t> g_filters;
 
 /**
  * @brief Function to fetch or create a new source filter in `g_filters`
+ *
  * @param source_id [in] string for `source_filter_t.source`
  * @param filter_ptr [out] pointer to a pointer containing `source_filter_t`.
  *          This is either set to point to the existing struct in g_filters,
@@ -57,6 +58,36 @@ extern std::vector<source_filter_t> g_filters;
  *          call to initialize new memory.
  */
 bool get_source_filter( const std::string& source_id, source_filter_t** filter_ptr );
+
+
+// Sequence Data
+
+/// @brief Possible classification values for `action_sequence_t`
+enum action_t {
+    SCAN
+};
+
+/**
+ * @brief Identifies an action in a sequence given by start and stop frames in a given source file.
+ *
+ * @var start_frame a `double` storing the start frame of the sequence
+ * @var end_frame a `double` storing the end frame of the sequence
+ * @var source source_id of `source_filter_t`
+ * @var fn the filename that this sequence was fetched from
+ * @var region_id region index in `source_filter_t`
+ * @var action classification value
+ */
+struct action_sequence_t {
+    double start_frame;
+    double end_frame;
+    std::string source;
+    std::string fn;
+    int region_id;
+    action_t action;
+};
+
+
+extern std::vector<action_sequence_t> g_sequences;
 
 
 // Data Persistence Functions
